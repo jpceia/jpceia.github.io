@@ -67,17 +67,31 @@ function Snake(w, h) {
             val = 1;
         else
             val = this.grid[pos.x][pos.y];
-        if (val == 1) {
+        if (val == 0) // continue
+        {
+            this.grid[pos.x][pos.y] = 1;
+            this.chain.unshift(pos);
+            del = this.chain.pop();
+            this.grid[del.x][del.y] = 0;
+            return {
+                status: 'continue',
+                add: pos,
+                del: del
+            };
+        }
+        if (val == 1) // game over
+        {
             return {
                 status: 'failed'
             };
         }
-        else {
+        else if (val == 2) // eat & grow
+        {
             this.grid[pos.x][pos.y] = 1;
             this.chain.unshift(pos);
             return {
-                status: 'success',
-                added: pos
+                status: 'grow',
+                add: pos
             };
         }
     }
@@ -93,12 +107,15 @@ function Game(canvas_id, direction_id, button_id) {
         fill: 'black'
     }
     this.apple_color = {
-        stroke: 'red',
-        fill: 'pink'
+        stroke: null,
+        fill: 'red'
     }
-    this.background_fill = 'lightgrey';
+    this.background_color = {
+        stroke: 'lightgrey',
+        fill: 'lightgrey'
+    };
     this.sq_size = 10;
-    this.weigth = 20;
+    this.width = 20;
     this.height = 20;
     this.state = 1;
     this.timer = null;
@@ -106,10 +123,23 @@ function Game(canvas_id, direction_id, button_id) {
 
     this.reset = function() {
         this.state = 0;
-        this.snake = new Snake(this.weigth, this.height);
+        this.snake = new Snake(this.width, this.height);
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
         this.directionDOM.textContent = getDirectionName(this.snake.direction);
         this.drawSquare(this.snake.chain[0], this.snake_color);
+        this.drawApple();
+    };
+
+    this.drawApple = function() {
+        while (1) {
+            let pos = getRandomPoint(this.width, this.height);
+            if (this.snake.grid[pos.x][pos.y] == 0)
+            {
+                this.snake.grid[pos.x][pos.y] = 2;
+                this.drawSquare(pos, this.apple_color);
+                break;
+            }
+        }
     };
 
     this.drawSquare = function(pos, color) {
@@ -134,12 +164,19 @@ function Game(canvas_id, direction_id, button_id) {
 
     this.next = function() {
         res = this.snake.next();
-        if (res.status == "success")
+        if (res.status == 'continue')
         {
-            this.drawSquare(res.added, this.snake_color);
+            this.drawSquare(res.add, this.snake_color);
+            this.drawSquare(res.del, this.background_color);
             return (1);
         }
-        else if (res.status == "failed")
+        else if (res.status == 'grow')
+        {
+            this.drawSquare(res.add, this.snake_color);
+            this.drawApple();
+            return (1);
+        }
+        else if (res.status == 'failed')
         {
             return (0);
         }
