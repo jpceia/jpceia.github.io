@@ -97,10 +97,11 @@ function Snake(w, h) {
     }
 }
 
-function Game(canvas_id, direction_id, button_id) {
+function Game(canvas_id, direction_id, button_id, score_id) {
     this.canvas = document.getElementById(canvas_id);
     this.directionDOM = document.getElementById(direction_id);
     this.button = document.getElementById(button_id);
+    this.scoreText = document.getElementById(score_id);
     this.ctx = canvas.getContext('2d');
     this.snake_color = {
         stroke: null,
@@ -118,16 +119,23 @@ function Game(canvas_id, direction_id, button_id) {
     this.width = 20;
     this.height = 20;
     this.state = 1;
+    this.score = 0;
     this.timer = null;
     this.speed = 200;
 
     this.reset = function() {
         this.state = 0;
+        this.score = 0;
+        this.updateScore();
         this.snake = new Snake(this.width, this.height);
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
         this.directionDOM.textContent = getDirectionName(this.snake.direction);
         this.drawSquare(this.snake.chain[0], this.snake_color);
         this.drawApple();
+    };
+
+    this.updateScore = function() {
+        this.scoreText.textContent = this.score;
     };
 
     this.drawApple = function() {
@@ -174,6 +182,8 @@ function Game(canvas_id, direction_id, button_id) {
         {
             this.drawSquare(res.add, this.snake_color);
             this.drawApple();
+            this.score += 1;
+            this.updateScore();
             return (1);
         }
         else if (res.status == 'failed')
@@ -254,7 +264,7 @@ function Game(canvas_id, direction_id, button_id) {
     }
 }
 
-var game = new Game('canvas', 'direction', 'button');
+var game = new Game('canvas', 'direction', 'button', 'score');
 
 document.addEventListener('keydown', e =>
 {
